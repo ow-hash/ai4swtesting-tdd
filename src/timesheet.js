@@ -1,20 +1,44 @@
+const HALF_HOUR = 0.5;
+
+function isValidProjectName(projectName) {
+  return typeof projectName === 'string' && projectName.trim() !== '';
+}
+
+function isValidDuration(duration) {
+  return (
+    Number.isFinite(duration) &&
+    duration > 0 &&
+    Number.isInteger(duration / HALF_HOUR)
+  );
+}
+
+function normalizeProjectName(projectName) {
+  return projectName.trim().toLowerCase();
+}
+
 class Timesheet {
-  timesheets = new Map();
+  #entries = [];
 
   submitTimesheet(projectName, duration) {
-    if (this.timesheets.has(projectName)) {
-      duration += this.timesheets.get(projectName);
+    if (!isValidProjectName(projectName) || !isValidDuration(duration)) {
+      return false;
     }
-    this.timesheets.set(projectName, duration);
+    this.#entries.push({ projectName: projectName.trim(), duration });
     return true;
   }
 
   getTimesheets() {
-    return [...this.timesheets.values()];
+    return this.#entries.map((entry) => ({ ...entry }));
   }
 
   getTotalTimesheetHours(projectName) {
-    return this.timesheets.get(projectName);
+    if (!isValidProjectName(projectName)) {
+      return 0;
+    }
+    const key = normalizeProjectName(projectName);
+    return this.#entries
+      .filter((entry) => normalizeProjectName(entry.projectName) === key)
+      .reduce((total, entry) => total + entry.duration, 0);
   }
 }
 
